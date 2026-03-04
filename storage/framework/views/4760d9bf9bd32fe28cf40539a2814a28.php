@@ -4,25 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Home</title>
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/app.css')); ?>">
 </head>
 <body class="frame-body">
     <div class="frame-grid frame-grid-3">
         <div class="card card-accent-blue card-soft-blue">
             <div class="card-title">Jadwal Pelatihan</div>
-            <div class="card-value">{{ \App\Models\TrainingSession::where('is_active', 1)->count() }}</div>
+            <div class="card-value"><?php echo e(\App\Models\TrainingSession::where('is_active', 1)->count()); ?></div>
             <div class="card-note">Sesi aktif tersedia</div>
         </div>
 
         <div class="card card-accent-green card-soft-green">
             <div class="card-title">Registrasi Saya</div>
-            <div class="card-value">{{ \App\Models\Registration::where('user_id', auth()->id())->count() }}</div>
+            <div class="card-value"><?php echo e(\App\Models\Registration::where('user_id', auth()->id())->count()); ?></div>
             <div class="card-note">Total riwayat pendaftaran</div>
         </div>
 
         <div class="card card-accent-purple card-soft-purple">
             <div class="card-title">Materi Tersedia</div>
-            <div class="card-value">{{ \App\Models\Material::where('is_active', 1)->count() }}</div>
+            <div class="card-value"><?php echo e(\App\Models\Material::where('is_active', 1)->count()); ?></div>
             <div class="card-note">Materi aktif untuk dipelajari</div>
         </div>
     </div>
@@ -105,4 +105,4 @@
         </div>
     </div>
 </body>
-</html>
+</html><?php /**PATH C:\laragon\www\diklat-balimed\resources\views/user/home.blade.php ENDPATH**/ ?>

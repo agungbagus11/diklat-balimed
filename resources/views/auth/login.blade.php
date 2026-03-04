@@ -1,34 +1,43 @@
-<x-guest-layout>
-    <div class="w-full max-w-md">
-        <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/30">
-            <div class="text-center mb-8">
-                <div class="mx-auto mb-4 flex justify-center">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DIKLAT RS BALIMED DENPASAR</title>
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="auth-wrapper">
+        <div class="login-card">
+            <div class="text-center">
+                <div class="logo-box">
                     <img src="https://rsbalimed.com/wp-content/uploads/2022/09/logo-balimed-hospital.png"
-                         alt="Logo BaliMed"
-                         class="h-16 object-contain">
+                         alt="Logo BaliMed">
                 </div>
 
-                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">
-                    DIKLAT RS BALIMED DENPASAR
-                </h1>
-                <p class="text-slate-500 mt-2 text-sm">
+                <h1 class="login-title">DIKLAT RS BALIMED DENPASAR</h1>
+                <p class="login-subtitle">
                     Portal Internal Training, Webinar, dan External Training
                 </p>
             </div>
 
             @if (session('status'))
-                <div class="mb-4 rounded-xl bg-green-50 border border-green-200 text-green-700 px-4 py-3 text-sm">
+                <div class="alert-success">
                     {{ session('status') }}
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}" class="space-y-5">
+            <form method="POST" action="{{ route('login') }}">
                 @csrf
 
-                <div>
-                    <label for="employee_id" class="block text-sm font-semibold text-slate-700 mb-2">
-                        ID Karyawan
-                    </label>
+                <div class="form-group">
+                    <label for="employee_id" class="form-label">ID Karyawan</label>
                     <input
                         id="employee_id"
                         name="employee_id"
@@ -37,47 +46,44 @@
                         required
                         autofocus
                         autocomplete="username"
-                        class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-800 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition"
+                        class="form-control"
                         placeholder="Masukkan ID Karyawan">
                     @error('employee_id')
-                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                        <p class="error-text">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div>
-                    <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Password
-                    </label>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
                     <input
                         id="password"
                         name="password"
                         type="password"
                         required
                         autocomplete="current-password"
-                        class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-800 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition"
+                        class="form-control"
                         placeholder="Password default: balimed1">
                     @error('password')
-                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                        <p class="error-text">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <label class="inline-flex items-center gap-2 text-sm text-slate-600">
-                        <input type="checkbox" name="remember" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                <div class="remember-row">
+                    <label class="remember-label">
+                        <input type="checkbox" name="remember">
                         <span>Ingat saya</span>
                     </label>
                 </div>
 
-                <button
-                    type="submit"
-                    class="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3.5 shadow-lg hover:scale-[1.01] hover:shadow-xl transition duration-300">
+                <button type="submit" class="btn-login">
                     Login ke Sistem
                 </button>
             </form>
 
-            <div class="mt-8 text-center text-sm text-slate-500">
+            <div class="login-footer">
                 Version 1.0.0 | © {{ date('Y') }} BaliMed Hospital
             </div>
         </div>
     </div>
-</x-guest-layout>
+</body>
+</html>

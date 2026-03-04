@@ -6,95 +6,98 @@ use App\Http\Controllers\Controller;
 use App\Models\Registration;
 use App\Models\Training;
 use App\Models\TrainingSession;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class RegistrationController extends Controller
 {
     public function index(Request $request)
     {
-        $trainingId = $request->get('training_id');
-        $sessionId = $request->get('session_id');
-        $status = $request->get('status');
+        $trainings = Training::orderBy('title')->get();
 
-        $query = Registration::with(['user', 'training.category', 'session'])
-            ->latest();
+        $sessions = TrainingSession::with('training')
+            ->orderByDesc('session_date')
+            ->orderByDesc('id')
+            ->get();
 
-        if (!empty($trainingId)) {
-            $query->where('training_id', $trainingId);
+        // Base query untuk summary
+        $baseQuery = Registration::query();
+
+        if ($request->filled('training_id')) {
+            $baseQuery->where('training_id', $request->training_id);
         }
 
-        if (!empty($sessionId)) {
-            $query->where('training_session_id', $sessionId);
+        if ($request->filled('session_id')) {
+            $baseQuery->where('training_session_id', $request->session_id);
         }
 
-        if (!empty($status)) {
-            $query->where('status', $status);
+        if ($request->filled('status')) {
+            $baseQuery->where('status', $request->status);
         }
 
-        $registrations = $query->get();
+        $summaryPending = (clone $baseQuery)->where('status', 'pending')->count();
+        $summaryApproved = (clone $baseQuery)->where('status', 'approved')->count();
+        $summaryRejected = (clone $baseQuery)->where('status', 'rejected')->count();
 
-        $trainings = Training::with('category')->orderBy('title')->get();
-        $sessions = TrainingSession::with('training')->orderByDesc('session_date')->get();
+        // Query utama tabel
+        $query = Registration::with([
+            'user',
+            'training.category',
+            'session',
+        ])->orderByDesc('id');
+
+        if ($request->filled('training_id')) {
+            $query->where('training_id', $request->training_id);
+        }
+
+        if ($request->filled('session_id')) {
+            $query->where('training_session_id', $request->session_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $registrations = $query->paginate(15)->withQueryString();
 
         return view('admin.registrations.index', compact(
             'registrations',
             'trainings',
             'sessions',
-            'trainingId',
-            'sessionId',
-            'status'
+            'summaryPending',
+            'summaryApproved',
+            'summaryRejected'
         ));
     }
 
-    public function approve(int $id): RedirectResponse
-    {
-        $registration = Registration::with('session')->findOrFail($id);
-
-        if (!in_array($registration->status, ['pending', 'rejected'])) {
-            return back()->with('error', 'Registrasi ini tidak bisa di-approve.');
-        }
-
-        $usedQuota = Registration::where('training_session_id', $registration->training_session_id)
-            ->whereIn('status', ['pending', 'approved'])
-            ->where('id', '!=', $registration->id)
-            ->count();
-
-        if ($usedQuota >= ($registration->session->quota ?? 0)) {
-            return back()->with('error', 'Kuota sesi sudah penuh.');
-        }
-
-        $registration->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-            'notes' => 'Disetujui admin',
-        ]);
-
-        return back()->with('success', 'Peserta berhasil di-approve.');
-    }
-
-    public function reject(int $id): RedirectResponse
+    public function approve($id)
     {
         $registration = Registration::findOrFail($id);
+        $registration->status = 'approved';
+        $registration->save();
 
-        if (!in_array($registration->status, ['pending', 'approved'])) {
-            return back()->with('error', 'Registrasi ini tidak bisa di-reject.');
-        }
-
-        $registration->update([
-            'status' => 'rejected',
-            'approved_by' => auth()->id(),
-            'notes' => 'Ditolak admin',
-        ]);
-
-        return back()->with('success', 'Registrasi berhasil ditolak.');
+        return redirect()
+            ->route('admin.registrations.index')
+            ->with('success', 'Registrasi peserta berhasil di-approve.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function reject($id)
+    {
+        $registration = Registration::findOrFail($id);
+        $registration->status = 'rejected';
+        $registration->save();
+
+        return redirect()
+            ->route('admin.registrations.index')
+            ->with('success', 'Registrasi peserta berhasil di-reject.');
+    }
+
+    public function destroy($id)
     {
         $registration = Registration::findOrFail($id);
         $registration->delete();
 
-        return back()->with('success', 'Registrasi berhasil dihapus. User bisa daftar ulang.');
+        return redirect()
+            ->route('admin.registrations.index')
+            ->with('success', 'Registrasi peserta berhasil dihapus. Peserta bisa daftar ulang.');
     }
 }

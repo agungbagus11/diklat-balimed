@@ -3,186 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Registrations</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <title>Registrasi Peserta</title>
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
 </head>
-<body class="bg-slate-100 min-h-screen p-6">
-    <div class="mb-6">
-        <h1 class="text-3xl font-extrabold text-slate-800">Manajemen Registrasi Training</h1>
-        <p class="text-slate-500 mt-2">Approve, reject, dan hapus peserta terdaftar.</p>
+<body class="frame-body">
+    <div class="section-card">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Registrasi Peserta</div>
+                <div class="section-subtitle">Kelola pendaftaran peserta training, approve, reject, atau hapus agar bisa daftar ulang</div>
+            </div>
+            <span class="badge badge-green">Admin Panel</span>
+        </div>
+
+        @if(session('success'))
+            <div class="alert-box alert-success-box">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert-box alert-danger-box">
+                {{ session('error') }}
+            </div>
+        @endif
     </div>
 
-    @if(session('success'))
-        <div class="mb-5 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-green-700">
-            {{ session('success') }}
+    <div class="grid grid-4">
+        <div class="card card-accent-blue card-soft-blue">
+            <div class="card-title">Total Registrasi</div>
+            <div class="card-value">{{ $registrations->total() }}</div>
+            <div class="card-note">Semua data hasil filter</div>
         </div>
-    @endif
 
-    @if(session('error'))
-        <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-            {{ session('error') }}
+        <div class="card card-accent-orange card-soft-orange">
+            <div class="card-title">Pending</div>
+            <div class="card-value">{{ $summaryPending }}</div>
+            <div class="card-note">Menunggu persetujuan admin</div>
         </div>
-    @endif
 
-    <div class="bg-white rounded-3xl shadow border border-slate-200 p-5 mb-6">
-        <form method="GET" action="{{ route('admin.registrations.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card card-accent-green card-soft-green">
+            <div class="card-title">Approved</div>
+            <div class="card-value">{{ $summaryApproved }}</div>
+            <div class="card-note">Sudah disetujui</div>
+        </div>
+
+        <div class="card card-accent-red card-soft-red">
+            <div class="card-title">Rejected</div>
+            <div class="card-value">{{ $summaryRejected }}</div>
+            <div class="card-note">Ditolak admin</div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Training</label>
-                <select name="training_id" class="w-full rounded-2xl border border-slate-300 px-4 py-3">
-                    <option value="">Semua Training</option>
-                    @foreach($trainings as $training)
-                        <option value="{{ $training->id }}" {{ (string)$trainingId === (string)$training->id ? 'selected' : '' }}>
-                            {{ $training->title }}
-                        </option>
-                    @endforeach
-                </select>
+                <div class="section-title">Filter Registrasi</div>
+                <div class="section-subtitle">Saring berdasarkan training, sesi, atau status</div>
             </div>
+        </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Sesi</label>
-                <select name="session_id" class="w-full rounded-2xl border border-slate-300 px-4 py-3">
-                    <option value="">Semua Sesi</option>
-                    @foreach($sessions as $session)
-                        <option value="{{ $session->id }}" {{ (string)$sessionId === (string)$session->id ? 'selected' : '' }}>
-                            {{ $session->session_name }} - {{ optional($session->session_date)->format('d M Y') }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+        <form method="GET" action="{{ route('admin.registrations.index') }}" class="admin-form">
+            <div class="form-grid form-grid-4">
+                <div class="form-group">
+                    <label class="form-label">Training</label>
+                    <select name="training_id" class="form-control">
+                        <option value="">Semua training</option>
+                        @foreach($trainings as $training)
+                            <option value="{{ $training->id }}" {{ request('training_id') == $training->id ? 'selected' : '' }}>
+                                {{ $training->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
-                <select name="status" class="w-full rounded-2xl border border-slate-300 px-4 py-3">
-                    <option value="">Semua Status</option>
-                    <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Approved</option>
-                    <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                    <option value="cancelled" {{ $status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Sesi</label>
+                    <select name="session_id" class="form-control">
+                        <option value="">Semua sesi</option>
+                        @foreach($sessions as $session)
+                            <option value="{{ $session->id }}" {{ request('session_id') == $session->id ? 'selected' : '' }}>
+                                {{ $session->session_name }} - {{ $session->training->title ?? '-' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <div class="flex items-end gap-3">
-                <button type="submit" class="px-5 py-3 rounded-2xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
-                    Filter
-                </button>
-                <a href="{{ route('admin.registrations.index') }}" class="px-5 py-3 rounded-2xl bg-slate-200 text-slate-700 font-semibold hover:bg-slate-300 transition">
-                    Reset
-                </a>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control">
+                        <option value="">Semua status</option>
+                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
+                        <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                        <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-blue">Filter</button>
+                        <a href="{{ route('admin.registrations.index') }}" class="btn btn-light">Reset</a>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="rounded-3xl bg-yellow-100 text-yellow-800 p-5 shadow-sm">
-            <p class="text-sm">Pending</p>
-            <h3 class="text-3xl font-extrabold mt-2">{{ $registrations->where('status', 'pending')->count() }}</h3>
+    <div class="section-card">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Daftar Peserta Terdaftar</div>
+                <div class="section-subtitle">Approve, reject, atau hapus data registrasi peserta</div>
+            </div>
         </div>
-        <div class="rounded-3xl bg-green-100 text-green-800 p-5 shadow-sm">
-            <p class="text-sm">Approved</p>
-            <h3 class="text-3xl font-extrabold mt-2">{{ $registrations->where('status', 'approved')->count() }}</h3>
-        </div>
-        <div class="rounded-3xl bg-red-100 text-red-800 p-5 shadow-sm">
-            <p class="text-sm">Rejected</p>
-            <h3 class="text-3xl font-extrabold mt-2">{{ $registrations->where('status', 'rejected')->count() }}</h3>
-        </div>
-        <div class="rounded-3xl bg-slate-100 text-slate-800 p-5 shadow-sm">
-            <p class="text-sm">Total</p>
-            <h3 class="text-3xl font-extrabold mt-2">{{ $registrations->count() }}</h3>
-        </div>
-    </div>
 
-    <div class="bg-white rounded-3xl shadow border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-100 text-slate-700">
+        <div class="table-wrap">
+            <table class="table registration-table">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left">Peserta</th>
-                        <th class="px-4 py-3 text-left">Training</th>
-                        <th class="px-4 py-3 text-left">Kategori</th>
-                        <th class="px-4 py-3 text-left">Sesi</th>
-                        <th class="px-4 py-3 text-left">Tanggal</th>
-                        <th class="px-4 py-3 text-left">Status</th>
-                        <th class="px-4 py-3 text-left">Daftar</th>
-                        <th class="px-4 py-3 text-left">Aksi</th>
+                        <th width="50">No</th>
+                        <th>Peserta</th>
+                        <th>Training</th>
+                        <th>Sesi</th>
+                        <th>Status</th>
+                        <th>Waktu Daftar</th>
+                        <th width="260">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($registrations as $item)
-                        @php
-                            $statusClass = match($item->status) {
-                                'approved' => 'bg-green-100 text-green-700',
-                                'pending' => 'bg-yellow-100 text-yellow-700',
-                                'rejected' => 'bg-red-100 text-red-700',
-                                'cancelled' => 'bg-slate-100 text-slate-700',
-                                default => 'bg-slate-100 text-slate-700',
-                            };
-                        @endphp
+                    @forelse($registrations as $index => $registration)
+                        <tr>
+                            <td>{{ $registrations->firstItem() + $index }}</td>
 
-                        <tr class="border-t align-top">
-                            <td class="px-4 py-3">
-                                <div class="font-bold text-slate-800">{{ $item->user->name ?? '-' }}</div>
-                                <div class="text-slate-500 text-xs">{{ $item->user->employee_id ?? '-' }}</div>
+                            <td>
+                                <div class="cell-title">{{ $registration->user->name ?? '-' }}</div>
+                                <div class="cell-sub">{{ $registration->user->employee_id ?? '-' }}</div>
+                                <div class="cell-sub">{{ $registration->user->email ?? '-' }}</div>
                             </td>
-                            <td class="px-4 py-3 font-semibold text-slate-800">
-                                {{ $item->training->title ?? '-' }}
+
+                            <td>
+                                <div class="cell-title">{{ $registration->training->title ?? '-' }}</div>
+                                <div class="cell-sub">{{ $registration->training->category->name ?? '-' }}</div>
                             </td>
-                            <td class="px-4 py-3">
-                                {{ $item->training->category->name ?? '-' }}
+
+                            <td>
+                                <div class="cell-title">{{ $registration->session->session_name ?? '-' }}</div>
+                                <div class="cell-sub">
+                                    {{ $registration->session && $registration->session->session_date ? \Carbon\Carbon::parse($registration->session->session_date)->format('d M Y') : '-' }}
+                                </div>
+                                <div class="cell-sub">
+                                    {{ $registration->session->start_time ?? '-' }} - {{ $registration->session->end_time ?? '-' }}
+                                </div>
                             </td>
-                            <td class="px-4 py-3">
-                                {{ $item->session->session_name ?? '-' }}
+
+                            <td>
+                                @if($registration->status === 'pending')
+                                    <span class="badge badge-orange">Pending</span>
+                                @elseif($registration->status === 'approved')
+                                    <span class="badge badge-green">Approved</span>
+                                @elseif($registration->status === 'rejected')
+                                    <span class="badge badge-red">Rejected</span>
+                                @elseif($registration->status === 'cancelled')
+                                    <span class="badge badge-purple">Cancelled</span>
+                                @else
+                                    <span class="badge badge-blue">{{ ucfirst($registration->status ?? '-') }}</span>
+                                @endif
                             </td>
-                            <td class="px-4 py-3">
-                                {{ optional($item->session->session_date)->format('d M Y') }}
+
+                            <td>
+                                <div class="cell-title">
+                                    @if(!empty($registration->registered_at))
+                                        {{ \Carbon\Carbon::parse($registration->registered_at)->format('d M Y H:i') }}
+                                    @elseif(!empty($registration->created_at))
+                                        {{ $registration->created_at->format('d M Y H:i') }}
+                                    @else
+                                        -
+                                    @endif
+                                </div>
                             </td>
-                            <td class="px-4 py-3">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold {{ $statusClass }}">
-                                    {{ ucfirst($item->status) }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                {{ optional($item->registered_at)->format('d M Y H:i') }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex flex-wrap gap-2">
-                                    @if(in_array($item->status, ['pending', 'rejected']))
-                                        <form method="POST" action="{{ route('admin.registrations.approve', $item->id) }}">
+
+                            <td>
+                                <div class="action-stack">
+                                    @if($registration->status !== 'approved')
+                                        <form method="POST" action="{{ route('admin.registrations.approve', $registration->id) }}">
                                             @csrf
-                                            <button type="submit" class="px-3 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition">
-                                                Approve
-                                            </button>
+                                            <button type="submit" class="btn btn-green btn-sm">Approve</button>
                                         </form>
                                     @endif
 
-                                    @if(in_array($item->status, ['pending', 'approved']))
-                                        <form method="POST" action="{{ route('admin.registrations.reject', $item->id) }}">
+                                    @if($registration->status !== 'rejected')
+                                        <form method="POST" action="{{ route('admin.registrations.reject', $registration->id) }}">
                                             @csrf
-                                            <button type="submit" class="px-3 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600 transition">
-                                                Reject
-                                            </button>
+                                            <button type="submit" class="btn btn-orange btn-sm">Reject</button>
                                         </form>
                                     @endif
 
-                                    <form method="POST" action="{{ route('admin.registrations.destroy', $item->id) }}"
-                                          onsubmit="return confirm('Hapus registrasi ini? User akan bisa daftar ulang.')">
+                                    <form method="POST" action="{{ route('admin.registrations.destroy', $registration->id) }}"
+                                          onsubmit="return confirm('Hapus registrasi ini? Peserta akan bisa daftar ulang.')">
                                         @csrf
-                                        <button type="submit" class="px-3 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 transition">
-                                            Delete
-                                        </button>
+                                        <button type="submit" class="btn btn-red btn-sm">Delete</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">
-                                Belum ada data registrasi.
+                            <td colspan="7">
+                                <div class="empty-box" style="margin:16px;">
+                                    Belum ada data registrasi peserta.
+                                </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($registrations->hasPages())
+            <div class="pagination-wrap">
+                {{ $registrations->links() }}
+            </div>
+        @endif
     </div>
 </body>
 </html>
